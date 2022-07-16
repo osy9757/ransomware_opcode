@@ -1,15 +1,10 @@
-from multiprocessing import Process, Semaphore, shared_memory
-import numpy as np
-import time
-import os
-import multiprocessing
+from operator import le
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.fftpack import fft
-import math
-import warnings
-import asyncio
+import os
+import time
+
 
 def FFT_data(data_name):         # FFT변환
     nfft=len(data_name)
@@ -28,177 +23,93 @@ def fast_corrcoef(X,y):
         return r
     return 0
 
-def dist(filename):
-    bufsize = 65536
-    start_time = time.time() # 시간 측정 시작
-    list_aes = np.zeros(200000)
-    list_rc4 = np.zeros(200000)
-    list_chacha = np.zeros(200000)
-    list_salsa = np.zeros(200000)
-    
-    idx_aes = 0
-    idx_rc4 = 0
-    idx_chacha = 0
-    idx_salsa = 0
-    with open('C:\\Users\\crypto\\Desktop\\vscode\\ransomware\\' + filename + ".out") as f:
-         while True:
-            lines = f.readlines(bufsize)
-            if not lines:
-                break
-            for npline in lines:                  
-                if npline == '49\n':
-                    list_aes[idx_aes] = int(npline.strip())
-                    idx_aes += 1
-                    list_rc4[idx_rc4] = int(npline.strip())
-                    idx_rc4 += 1
-                    list_chacha[idx_chacha] = int(npline.strip())
-                    idx_chacha += 1
-                    list_salsa[idx_salsa] = int(npline.strip())
-                    idx_salsa += 1
-                elif npline == '193\n':
-                    list_aes[idx_aes] = int(npline.strip())         
-                    idx_aes += 1
-                    list_rc4[idx_rc4] = int(npline.strip())
-                    idx_rc4 += 1
-                    list_salsa[idx_salsa] = int(npline.strip())
-                    idx_salsa += 1
-                elif npline == '129\n':
-                    list_aes[idx_aes] = int(npline.strip())
-                    idx_aes += 1
-                    list_rc4[idx_rc4] = int(npline.strip())
-                    idx_rc4 += 1
-                elif npline == '132\n':
-                    list_chacha[idx_chacha] = int(npline.strip())
-                    idx_chacha += 1
-                    list_salsa[idx_salsa] = int(npline.strip())
-                    idx_salsa += 1
-                
-                if idx_aes >= 100000:                    
-                    asyncio.run(FFT_aes8(list_aes))
-                    asyncio.run(FFT_aes32(list_aes))              
-                    idx_aes = 0
-                    list_aes = np.zeros(200000)
+def make_feature(encryption_type):
+    if encryption_type == "aes1":
+        os.chdir("C:\\Users\\crypto\\Desktop\\vscode\\feature")
+        wb = pd.read_csv('./aes_opt.out',header = None, dtype = int, engine="pyarrow")
+        feature = wb[0][:len(wb)]
+        feature = feature.to_numpy()
+        feature = FFT_data(feature)
+    elif encryption_type == "aes2":
+        os.chdir("C:\\Users\\crypto\\Desktop\\vscode\\feature")
+        wb = pd.read_csv('./AES_128_cbc.out',header = None, dtype = int, engine="pyarrow")
+        feature = wb[0][:len(wb)]
+        feature = feature.to_numpy()
+        feature = FFT_data(feature)
+    elif encryption_type == "aes_api":
+        os.chdir("C:\\Users\\crypto\\Desktop\\vscode\\feature")
+        wb = pd.read_csv('./Wincrypt_output.out',header = None, dtype = int, engine="pyarrow")
+        feature = wb[0][:len(wb)]
+        feature = feature.to_numpy()
+        feature = FFT_data(feature)
+    elif encryption_type == "chacha":
+        os.chdir("C:\\Users\\crypto\\Desktop\\vscode\\feature")
+        wb = pd.read_csv('./chacha20v2.out',header = None, dtype = int, engine="pyarrow")
+        feature = wb[0][:len(wb)]
+        feature = feature.to_numpy()
+        feature = FFT_data(feature)
+    elif encryption_type == "salsa":
+        os.chdir("C:\\Users\\crypto\\Desktop\\vscode\\feature")
+        wb = pd.read_csv('./salsa20gc2_output.out',header = None, dtype = int, engine="pyarrow")
+        feature = wb[0][:len(wb)]
+        feature = feature.to_numpy()
+        feature = FFT_data(feature)
 
-                if idx_rc4 >= 100000:   
-                    asyncio.run(FFT_rc4(list_rc4))
-                    idx_rc4 = 0
-                    list_rc4 = np.zeros(200000)
-                if idx_chacha >= 100000:  
-                    asyncio.run(FFT_chacha(list_chacha))
-                    idx_chacha = 0
-                    list_chacha = np.zeros(200000)
-                if idx_salsa >= 100000:  
-                    asyncio.run(FFT_salsa(list_salsa)) 
-                    idx_salsa = 0
-                    list_salsa = np.zeros(200000)
+    return feature
 
-# Correlation 비교
-async def FFT_aes8(data_name): 
-    flag = 0
-    corr = 0
-    start_time = time.time() 
-    os.chdir("C:\\Users\\crypto\\Desktop\\vscode\\feature") 
-    wb=pd.read_csv('aes_opt.out', header=None)     
-    feature =wb[0][:len(wb)]
-    window_size_aes = len(feature)  # ransomware correlation 비교  window_size
-    feature_aes = FFT_data(feature) # feature FFT 변환값 저장
-    for i in range(0,len(data_name)-window_size_aes,10000):
-        rate = fast_corrcoef(FFT_data(data_name[i:i+window_size_aes]),feature_aes)
-        if corr < rate : corr = rate
-        if  rate >= 0.8:
-            print("aes_8bit Detect!!  Correlation : ", rate)
-            print("--- aes %s seconds ---" % (time.time() - start_time))
-            flag += 1
-    if flag == 0 : print("Correlation Analysis (AES_optimization) : %s" %corr)
+def make_ransom(file_name, encryption_type):
+    os.chdir("C:\\Users\\crypto\\Desktop\\vscode\\ransomware")
+    op = pd.read_csv('./'+file_name+'.out',header = None, dtype = int, engine="pyarrow")
+    ransom = op[0][:len(op)]    
+    ransom = ransom.to_numpy()
 
-async def FFT_aes32(data_name): 
-    flag = 0
-    corr = 0
-    start_time = time.time()  
-    os.chdir("C:\\Users\\crypto\\Desktop\\vscode\\feature") 
-    wb=pd.read_csv('aes_32bit.out', header=None)     
-    feature =wb[0][:len(wb)]
-    window_size_aes = len(feature)  # ransomware correlation 비교  window_size
-    feature_aes = FFT_data(feature) # feature FFT 변환값 저장
-    for i in range(0,len(data_name)-window_size_aes,100):
-        rate = fast_corrcoef(FFT_data(data_name[i:i+window_size_aes]),feature_aes)
-        if corr < rate : corr = rate
-        if  rate >= 0.8:
-            print("aes_32bit Detect!!  Correlation : ", rate)
-            print("--- aes %s seconds ---" % (time.time() - start_time))
-            flag += 1
-    if flag == 0 : print("Correlation Analysis (AES) : %s" %corr)
+    if encryption_type == "aes1":
+        temp = ransom[ransom != 201]
+        aes = temp[temp != 132]
+        return aes
+    elif encryption_type == "aes2":
+        temp = ransom[ransom != 201]
+        aes = temp[temp != 132]
+        return aes
+    elif encryption_type == "aes_api":
+        temp = ransom[ransom != 201]
+        aes = temp[temp != 132]
+        return aes
+    elif encryption_type == "chacha":   
+        chacha = ransom[ransom != 193]
+        chacha = chacha[chacha != 129]
+        return chacha
+    elif encryption_type == "salsa":
+        temp = ransom[ransom != 201]
+        salsa = temp[temp != 129] 
+        return salsa
 
-async def FFT_rc4(data_name):    
-    flag = 0
-    corr = 0
-    start_time = time.time()
-    # Feature opcode RC4
-    os.chdir("C:\\Users\\crypto\\Desktop\\vscode\\feature") 
-    wb=pd.read_csv('RC4.out', header=None)     
-    feature =wb[0][:len(wb)]
-    window_size_rc4 = len(feature)  # ransomware correlation 비교  window_size
-    feature_rc4 = FFT_data(feature) # feature FFT 변환값 저장
 
-    for i in range(0,len(data_name)-window_size_rc4,100):
-        rate = fast_corrcoef(FFT_data(data_name[i:i+window_size_rc4]),feature_rc4)
-        if corr < rate : corr = rate
-        if  rate >= 0.8:
-            print("rc4 Detect!!  Correlation : ", rate)
-            print("--- rc4 %s seconds ---" % (time.time() - start_time))
-            flag += 1
-    if flag == 0 : print("Correlation Analysis (RC4) : %s" %corr)
+start_time = time.time() # 시간 측정 시작
 
-async def FFT_chacha(data_name): 
-    flag = 0 
-    corr = 0
-    start_time = time.time()   
-    # Feature opcode ChaCha
-    os.chdir("C:\\Users\\crypto\\Desktop\\vscode\\feature") 
-    wb=pd.read_csv('chacha10.out', header=None)     
-    feature =wb[0][:len(wb)]
-    window_size_ChaCha = len(feature)  # ransomware correlation 비교  window_size
-    feature_ChaCha = FFT_data(feature) # feature FFT 변환값 저장
-    for i in range(0,len(data_name)-window_size_ChaCha,100):      
-        rate = fast_corrcoef(FFT_data(data_name[i:i+window_size_ChaCha]),feature_ChaCha)
-        if corr < rate : corr = rate
-        if  rate >= 0.8:
-            print("ChaCha Detect!!  Correlation : ", rate)
-            print("--- ChaCha %s seconds ---" % (time.time() - start_time))
-            flag += 1
-    if flag == 0 : print("Correlation Analysis (ChaCha) : %s" %corr)
+file_name = 'wannaycry_3gb'
+encryption_type = "aes1" # aes1(고속화) aes2 aes_api chacha salsa
 
-async def FFT_salsa(data_name): 
-    flag = 0
-    corr = 0
-    start_time = time.time()   
-    # Feature opcode Salsa
-    os.chdir("C:\\Users\\crypto\\Desktop\\vscode\\feature") 
-    wb=pd.read_csv('salsa_git1.out', header=None)     
-    feature =wb[0][:len(wb)]
-    window_size_Salsa = len(feature)  # ransomware correlation 비교  window_size
-    feature_Salsa = FFT_data(feature) # feature FFT 변환값 저장
-    for i in range(0,len(data_name)-window_size_Salsa,100):     
-        rate = fast_corrcoef(FFT_data(data_name[i:i+window_size_Salsa]),feature_Salsa)
-        if corr < rate : corr = rate
-        if  rate >= 0.8:
-            print("salsa Detect!!  Correlation : ", rate)
-            print("--- Salsa %s seconds ---" % (time.time() - start_time))
-            flag += 1
-    if flag == 0 : print("Correlation Analysis (Salsa) : %s" %corr)
+ransom = make_ransom(file_name, encryption_type)
+feature = make_feature(encryption_type)
 
-if __name__ == "__main__":
-    # ransomware opcode
+print("--- Finished : %s seconds ---" % (time.time() - start_time))
 
-    start_time = time.time() # 시간 측정 시작
-   
-    file_name = "satan"
-    print(file_name + " Correlation Analysis Start ")
+ransom_len = len(ransom)
+feature_len = len(feature)
 
-# Correlation 검사 각각
+len_stan = feature_len // 5
+len_stan = len_stan - len_stan % 10 
+rate = np.zeros(ransom_len-feature_len)
 
-    dist(file_name)
+print("--- Finished : %s seconds ---" % (time.time() - start_time))
 
-    print(file_name + " Correlation Analysis Finished ")
+for i in range(0,ransom_len-feature_len,len_stan):
+    corr = fast_corrcoef(ransom[i:i + feature_len],feature)
+    rate[i] = corr
 
-    print("--- Finished : %s seconds ---" % (time.time() - start_time))
+print("--- Finished : %s seconds ---" % (time.time() - start_time))
+
+plt.figure(figsize=(120,30))
+plt.plot(rate)
+plt.show()

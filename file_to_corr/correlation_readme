@@ -1,0 +1,8 @@
+#07.16
+수정해야 할 사항 : 1. ransomware 와 feature correlation coefficient 확인 시 분할 하여 검사 진행 할 때 
+                  +1000 부분을 feature의 size 기준으로 한다.
+                  
+                  2. 검사함에 있어 속도 최적화 
+                  
+                  3. 간혹 oserrorno 22 뜨는 이유 파악
+                  

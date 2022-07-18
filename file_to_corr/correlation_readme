@@ -6,3 +6,7 @@
                   
                   3. 간혹 oserrorno 22 뜨는 이유 파악
                   
+                
+#07.18
+수정해야할 점
+1. 다량의 ransomware와 feature가 있을 때 자동으로 correlation 검사하면서 결과값을 csv 파일에 저장하게

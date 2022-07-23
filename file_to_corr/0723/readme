@@ -1,0 +1,5 @@
+# error 
+ValueError: operands could not be broadcast together with shapes
+
+내 생각으로 인자 전달 방법만 바뀌었을 뿐인데 operand가 다르다는 에러가 나온다.
+multiprocessing으로 진행되 오류 부분이 잘 확인 되지 않아 multiprocessing을 제외하고 확인해볼 예정

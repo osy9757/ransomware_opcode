@@ -1,2 +1,11 @@
 오류를 솎아주기 위해 try except 을 사용하였고 이 과정에서 try에서 print와 같은 함수를 사용하면 try에서 벗어나는 문제가 있었다.
-try except을 사용하는 이유는 .out 파일을 읽어올 때 생기는 오류로 코드 진행이 멈추는 것을 방지하기 위함이므로 그 부분만 try를 해주고 except이 될 경우 continue
+try except을 사용하는 이유는 .out 파일을 읽어올 때 생기는 오류로 코드 진행이 멈추는 것을 방지하기 위함이므로 그 부분만 try를 해주고 except이 될 경우 continue로 반복문을
+다음으로 넘겨주었다.
+
+operands could not be broadcast together with shapes 
+위 오류가 계속 발생하였었다.
+이유를 살펴보면 FFT 변환을 해줄 경우 좌우 대칭으로 결과가 나오기 때문에 1/2를 해주게 된다.
+기존의 코드에서 실행할 때마다 feature를 fft변환 해주면서 낭비되는 자원을 줄이기 위해 먼저 fft 변환 후 
+그 값을 불러와 correlation 검사를 하게 바꾸었는데 이 과정에서 전에는 data 와 feature 같은 사이즈를 fft 변환 하기 때문에 그 후에도 같은 사이즈를 가졌지만
+지금은 feature와 data를 가져와 data만 fft 변환을 하여 사이즈가 맞지 않는 것이였다. 해결방안은 간단하게 data를 feature의 2배 사이즈로 잘라가며 검사해주었다. 
+

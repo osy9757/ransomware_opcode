@@ -1,0 +1,2 @@
+오류를 솎아주기 위해 try except 을 사용하였고 이 과정에서 try에서 print와 같은 함수를 사용하면 try에서 벗어나는 문제가 있었다.
+try except을 사용하는 이유는 .out 파일을 읽어올 때 생기는 오류로 코드 진행이 멈추는 것을 방지하기 위함이므로 그 부분만 try를 해주고 except이 될 경우 continue

@@ -105,7 +105,6 @@ if __name__ == '__main__':
         for p in procs:
             p.join()
 
-        print(aes8_corr.values())
 
         ws.append([file,aes8_corr.values(),aes32_corr,chacha_corr,salsa_corr])
         wb.save(result_file)

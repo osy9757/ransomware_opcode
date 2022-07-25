@@ -9,3 +9,6 @@ operands could not be broadcast together with shapes
 그 값을 불러와 correlation 검사를 하게 바꾸었는데 이 과정에서 전에는 data 와 feature 같은 사이즈를 fft 변환 하기 때문에 그 후에도 같은 사이즈를 가졌지만
 지금은 feature와 data를 가져와 data만 fft 변환을 하여 사이즈가 맞지 않는 것이였다. 해결방안은 간단하게 data를 feature의 2배 사이즈로 잘라가며 검사해주었다. 
 
+남은 문제는 Multiprocessing.process의 함수 return 값을 가져와 excel에 저장하는 것이다.
+해결방안은 queue, pipe, shared_memory 등이 있는 것 같은데 어느것이 좋을지 생각해봐야 겠다.
+
